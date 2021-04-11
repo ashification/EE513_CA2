@@ -5,6 +5,6 @@ if [ "$1" == "" ]; then
 else
         git add .
         git commit -m "$1"
-        git push origin BROKER_Code
+        git push origin HEAD:BROKER_Code
         printf "Code Comitted. Please Verify\n"
 fi
