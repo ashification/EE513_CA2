@@ -4,13 +4,16 @@
 #include "MQTTClient.h"
 
 #define ADDRESS     "tcp://192.168.1.32:1883"
-#define CLIENTID    "Broker"
+#define CLIENTID    "subscriber_rpi"
 #define AUTHMETHOD  "alee"
 #define AUTHTOKEN   "rpi"
 #define TOPIC       "ee513/CPUTemp"
 #define PAYLOAD     "Hello World!"
 #define QOS         1
 #define TIMEOUT     10000L
+
+//MQTT_C_CLIENT_TRACE=ON
+//MQTT_C_CLIENT_TRACE_LEVEL=PROTOCOL
 
 volatile MQTTClient_deliveryToken deliveredtoken;
 
