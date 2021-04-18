@@ -192,6 +192,21 @@ void ADXL345::displayPitchAndRoll(int iterations){
 	}
 }
 
+///////////////////////////////////
+float ADXL345::displayPitch(){
+	float pitchvalue;
+	this->readSensorState();
+        pitchvalue = this->getPitch();
+	return pitchvalue;
+}
+
+float ADXL345::displayRoll(){
+	float rollvalue;
+	this->readSensorState();
+        rollvalue = this->getRoll();
+	return rollvalue;
+}
+
 ADXL345::~ADXL345() {}
 
 } /* namespace exploringRPi */

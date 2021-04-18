@@ -7,13 +7,12 @@
 #define CLIENTID    "subscriber_rpi"
 #define AUTHMETHOD  "alee"
 #define AUTHTOKEN   "rpi"
-#define TOPIC       "ee513/CPUTemp"
+#define TOPIC1      "ee513/CPUTemp"
+#define TOPIC2      "ee513/RPIPitchAndRoll"
 #define PAYLOAD     "Hello World!"
 #define QOS         1
 #define TIMEOUT     10000L
 
-//MQTT_C_CLIENT_TRACE=ON
-//MQTT_C_CLIENT_TRACE_LEVEL=PROTOCOL
 
 volatile MQTTClient_deliveryToken deliveredtoken;
 
@@ -59,9 +58,12 @@ int main(int argc, char* argv[]) {
         printf("Failed to connect, return code %d\n", rc);
         exit(-1);
     }
-    printf("Subscribing to topic %s\nfor client %s using QoS%d\n\n"
-           "Press Q<Enter> to quit\n\n", TOPIC, CLIENTID, QOS);
-    MQTTClient_subscribe(client, TOPIC, QOS);
+    
+    printf("Subscribing to topics:\n %s\n %s\nfor client %s\n using QoS:%d\n\n"
+           "Press Q<Enter> to quit\n\n", TOPIC1, TOPIC2, CLIENTID, QOS);
+    MQTTClient_subscribe(client, TOPIC1, QOS);
+    MQTTClient_subscribe(client, TOPIC2, QOS);
+
 
     do {
         ch = getchar();

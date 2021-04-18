@@ -3,16 +3,23 @@
 #include <sstream>
 #include <fstream>
 #include <string.h>
+#include <unistd.h>
+#include <pthread.h>
+#include "ADXL345.h"
 #include "MQTTClient.h"
+
 #define  CPU_TEMP "/sys/class/thermal/thermal_zone0/temp"
+
 using namespace std;
+using namespace exploringRPi;
 
 //Please replace the following address with the address of your server
 #define ADDRESS    "tcp://192.168.1.32:1883"
 #define CLIENTID   "Publisher_rpi"
 #define AUTHMETHOD "alee"
 #define AUTHTOKEN  "rpi"
-#define TOPIC      "ee513/CPUTemp"
+#define TOPIC1      "ee513/CPUTemp"
+#define TOPIC2      "ee513/RPIPitchAndRoll"
 #define QOS        1
 #define TIMEOUT    10000L
 
@@ -25,8 +32,29 @@ float getCPUTemperature() {        // get the CPU temperature
    return (((float)cpuTemp)/1000);
 }
 
+float getRpiPitch() {
+   ADXL345 sensor(1,0x53);
+   sensor.setResolution(ADXL345::NORMAL);
+   sensor.setRange(ADXL345::PLUSMINUS_4_G);
+   //sensor.displayPitchAndRoll();
+   sensor.displayPitch();
+   return sensor.displayPitch();
+}
+
+float getRpiRoll() {
+   ADXL345 sensor(1,0x53);
+   sensor.setResolution(ADXL345::NORMAL);
+   sensor.setRange(ADXL345::PLUSMINUS_4_G);
+   sensor.displayRoll();
+   return sensor.displayRoll();
+
+}
+
+
+
 int main(int argc, char* argv[]) {
-   char str_payload[100];          // Set your max message size here
+   char str_payload1[100];          // Set your max message size here
+   char str_payload2[100];          // Set your max message size here
    
    MQTTClient client;
    MQTTClient_connectOptions opts = MQTTClient_connectOptions_initializer;
@@ -46,23 +74,35 @@ int main(int argc, char* argv[]) {
       return -1;
    }
 
-   sprintf(str_payload, "{\"d\":{\"CPUTemp\": %f }}", getCPUTemperature());
-   //sprintf(str_payload, "Test Publish");
-   
-   pubmsg.payload = str_payload;
-   pubmsg.payloadlen = strlen(str_payload);
+   // Publish the CPU Temp Msg
+
+   sprintf(str_payload1, "{\"d\":{\"CPUTemp\": %f }}", getCPUTemperature());   
+   pubmsg.payload = str_payload1;
+   pubmsg.payloadlen = strlen(str_payload1);
    pubmsg.qos = QOS;
    pubmsg.retained = 0;
    
-   MQTTClient_publishMessage(client, TOPIC, &pubmsg, &token);
-   //MQTTClient_publishMessage(client, TOPIC, 'Publish String', &token);
+   MQTTClient_publishMessage(client, TOPIC1, &pubmsg, &token);
    cout << "Waiting for up to " << (int)(TIMEOUT/1000) <<
-        " seconds for publication of " << str_payload <<
-        " \non topic " << TOPIC << " for ClientID: " << CLIENTID << endl;
+        " seconds for publication of " << str_payload1 <<
+        " \non topic " << TOPIC1 << " for ClientID: " << CLIENTID << endl;
    rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
    cout << "Message with token " << (int)token << " delivered." << endl;
+
+   // Publish the pitch and roll msg
+
+   sprintf(str_payload2, "{\"d\":{\"RPI Pitch\": %f :\"and Roll\": %f}}", getRpiPitch(),getRpiRoll());   
+   pubmsg.payload = str_payload2;
+   pubmsg.payloadlen = strlen(str_payload2);
+   pubmsg.qos = QOS;
+   pubmsg.retained = 0;
    
-   ///printf("Sent Message");
+   MQTTClient_publishMessage(client, TOPIC2, &pubmsg, &token);
+   cout << "Waiting for up to " << (int)(TIMEOUT/1000) <<
+        " seconds for publication of " << str_payload2 <<
+        " \non topic " << TOPIC2 << " for ClientID: " << CLIENTID << endl;
+   rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
+   cout << "Message with token " << (int)token << " delivered." << endl;
 
    MQTTClient_disconnect(client, 10000);
    MQTTClient_destroy(&client);

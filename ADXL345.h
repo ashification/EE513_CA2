@@ -82,6 +82,8 @@ public:
 
 	// Debugging method to display and update the pitch/roll on the one line
 	virtual void displayPitchAndRoll(int iterations = 600);
+	virtual float displayPitch();
+	virtual float displayRoll();
 	virtual ~ADXL345();
 };
 
