@@ -10,7 +10,7 @@
 #define TOPIC1      "ee513/CPUTemp"
 #define TOPIC2      "ee513/RPIPitchAndRoll"
 #define PAYLOAD     "Hello World!"
-#define QOS         1
+#define QOS         2
 #define TIMEOUT     10000L
 
 

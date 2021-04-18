@@ -9,6 +9,8 @@
 #include "MQTTClient.h"
 
 #define  CPU_TEMP "/sys/class/thermal/thermal_zone0/temp"
+#define  UPTIME   "/proc/uptime"
+
 
 using namespace std;
 using namespace exploringRPi;
@@ -20,7 +22,7 @@ using namespace exploringRPi;
 #define AUTHTOKEN  "rpi"
 #define TOPIC1      "ee513/CPUTemp"
 #define TOPIC2      "ee513/RPIPitchAndRoll"
-#define QOS        1
+#define QOS        2
 #define TIMEOUT    10000L
 
 float getCPUTemperature() {        // get the CPU temperature
@@ -30,6 +32,15 @@ float getCPUTemperature() {        // get the CPU temperature
    fs >> cpuTemp;
    fs.close();
    return (((float)cpuTemp)/1000);
+}
+
+float getUptime() {        // get uptime
+   float uptime;                    // store as an string
+   fstream fs;
+   fs.open(UPTIME, fstream::in); // read from the file
+   fs >> uptime;
+   fs.close();
+   return uptime;
 }
 
 float getRpiPitch() {
@@ -55,6 +66,7 @@ float getRpiRoll() {
 int main(int argc, char* argv[]) {
    char str_payload1[100];          // Set your max message size here
    char str_payload2[100];          // Set your max message size here
+   //printf("Uptime in Seconds: ", getUptime());
    
    MQTTClient client;
    MQTTClient_connectOptions opts = MQTTClient_connectOptions_initializer;
