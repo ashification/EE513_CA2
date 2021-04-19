@@ -2,6 +2,10 @@
 #include "stdlib.h"
 #include "string.h"
 #include "MQTTClient.h"
+#include "ledClass.h"
+
+#define GPIO         "/sys/class/gpio/"
+#define FLASH_DELAY  50000 // 50 milliseconds
 
 #define ADDRESS     "tcp://192.168.1.32:1883"
 #define CLIENTID    "subscriber_rpi"
@@ -23,6 +27,9 @@ void delivered(void *context, MQTTClient_deliveryToken dt) {
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
     int i;
     char* payloadptr;
+    LED redled(6), orangeled(13), yellowled(19);          // create two LED objects
+    redled.turnOn();               // turn GPIO on
+
     printf("Message arrived\n");
     printf("     topic: %s\n", topicName);
     printf("   message: ");
@@ -33,6 +40,8 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
     putchar('\n');
     MQTTClient_freeMessage(&message);
     MQTTClient_free(topicName);
+    usleep(FLASH_DELAY);           // sleep for 50ms
+    redled.turnOff();               // turn GPIO on    
     return 1;
 }
 
@@ -46,6 +55,9 @@ int main(int argc, char* argv[]) {
     MQTTClient_connectOptions opts = MQTTClient_connectOptions_initializer;
     int rc;
     int ch;
+    int tempval;
+   
+   
 
     MQTTClient_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
     opts.keepAliveInterval = 20;

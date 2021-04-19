@@ -7,9 +7,12 @@
 #include <pthread.h>
 #include "ADXL345.h"
 #include "MQTTClient.h"
-
-#define  CPU_TEMP "/sys/class/thermal/thermal_zone0/temp"
-#define  UPTIME   "/proc/uptime"
+#include "ledClass.h"
+  
+#define CPU_TEMP     "/sys/class/thermal/thermal_zone0/temp"
+#define UPTIME       "/proc/uptime"
+#define GPIO         "/sys/class/gpio/"
+#define FLASH_DELAY  500000 // 500 milliseconds
 
 
 using namespace std;
@@ -67,6 +70,9 @@ int main(int argc, char* argv[]) {
    char str_payload1[100];          // Set your max message size here
    char str_payload2[100];          // Set your max message size here
    //printf("Uptime in Seconds: ", getUptime());
+
+   LED blueled(26);          // create four LED objects
+
    
    MQTTClient client;
    MQTTClient_connectOptions opts = MQTTClient_connectOptions_initializer;
@@ -86,35 +92,42 @@ int main(int argc, char* argv[]) {
       return -1;
    }
 
-   // Publish the CPU Temp Msg
 
-   sprintf(str_payload1, "{\"d\":{\"CPUTemp\": %f }}", getCPUTemperature());   
-   pubmsg.payload = str_payload1;
-   pubmsg.payloadlen = strlen(str_payload1);
-   pubmsg.qos = QOS;
-   pubmsg.retained = 0;
+   for(int i=0; i<20; i++){          // LEDs will alternate
+     blueled.turnOn();             // turn GPIO off
+     
+     // Publish the CPU Temp Msg
+     sprintf(str_payload1, "{\"d\":{\"CPUTemp\": %f }}", getCPUTemperature());   
+     pubmsg.payload = str_payload1;
+     pubmsg.payloadlen = strlen(str_payload1);
+     pubmsg.qos = QOS;
+     pubmsg.retained = 0;
+     MQTTClient_publishMessage(client, TOPIC1, &pubmsg, &token);
+     cout << "Waiting for up to " << (int)(TIMEOUT/1000) <<
+          " seconds for publication of " << str_payload1 <<
+          " \non topic " << TOPIC1 << " for ClientID: " << CLIENTID << endl;
+     rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
+     cout << "Message with token " << (int)token << " delivered." << endl;
+
+     // Publish the pitch and roll msg
+
+     sprintf(str_payload2, "{\"d\":{\"RPI Pitch\": %f :\"and Roll\": %f}}", getRpiPitch(),getRpiRoll());   
+     pubmsg.payload = str_payload2;
+     pubmsg.payloadlen = strlen(str_payload2);
+     pubmsg.qos = QOS;
+     pubmsg.retained = 0;
    
-   MQTTClient_publishMessage(client, TOPIC1, &pubmsg, &token);
-   cout << "Waiting for up to " << (int)(TIMEOUT/1000) <<
-        " seconds for publication of " << str_payload1 <<
-        " \non topic " << TOPIC1 << " for ClientID: " << CLIENTID << endl;
-   rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
-   cout << "Message with token " << (int)token << " delivered." << endl;
+     MQTTClient_publishMessage(client, TOPIC2, &pubmsg, &token);
+     cout << "Waiting for up to " << (int)(TIMEOUT/1000) <<
+          " seconds for publication of " << str_payload2 <<
+          " \non topic " << TOPIC2 << " for ClientID: " << CLIENTID << endl;
+     rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
+     cout << "Message with token " << (int)token << " delivered." << endl;
 
-   // Publish the pitch and roll msg
+     blueled.turnOff();             // turn GPIO off
+     usleep(FLASH_DELAY);           // sleep for 50ms
 
-   sprintf(str_payload2, "{\"d\":{\"RPI Pitch\": %f :\"and Roll\": %f}}", getRpiPitch(),getRpiRoll());   
-   pubmsg.payload = str_payload2;
-   pubmsg.payloadlen = strlen(str_payload2);
-   pubmsg.qos = QOS;
-   pubmsg.retained = 0;
-   
-   MQTTClient_publishMessage(client, TOPIC2, &pubmsg, &token);
-   cout << "Waiting for up to " << (int)(TIMEOUT/1000) <<
-        " seconds for publication of " << str_payload2 <<
-        " \non topic " << TOPIC2 << " for ClientID: " << CLIENTID << endl;
-   rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
-   cout << "Message with token " << (int)token << " delivered." << endl;
+    }
 
    MQTTClient_disconnect(client, 10000);
    MQTTClient_destroy(&client);
