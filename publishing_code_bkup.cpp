@@ -82,7 +82,25 @@ int main(int argc, char* argv[]) {
    MQTTClient_willOptions will_opts = MQTTClient_willOptions_initializer;
    will_opts.topicName = TOPIC1;    
    will_opts.message = "ALee Publisher LWT: Disconnected from CPUTemp";
-   opts.will = &will_opts; 
+   opts.will = &will_opts;
+
+
+ /*  
+   opts.will = will_opts;
+   will_opts.message = "ALee Publisher LWT";
+   will_opts.qos = 1;
+   will_opts.retained = 0;
+   will_opts.topicName = "ee513/PubLWT";
+
+
+    opts.will = &will_opts;
+    opts.will->message = "ALee Publisher LWT";
+    opts.will->qos = 1;
+    opts.will->retained = 0;
+    opts.will->topicName = "ee513/PubLWT";
+   // opts.will = NULL;
+ */
+   
 
    MQTTClient_message pubmsg = MQTTClient_message_initializer;
    MQTTClient_deliveryToken token;

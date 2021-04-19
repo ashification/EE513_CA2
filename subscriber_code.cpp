@@ -53,17 +53,26 @@ void connlost(void *context, char *cause) {
 int main(int argc, char* argv[]) {
     MQTTClient client;
     MQTTClient_connectOptions opts = MQTTClient_connectOptions_initializer;
+    MQTTClient_willOptions wopts = MQTTClient_willOptions_initializer;
+
     int rc;
     int ch;
     int tempval;
    
-   
+     
 
     MQTTClient_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
     opts.keepAliveInterval = 20;
     opts.cleansession = 1;
     opts.username = AUTHMETHOD;
     opts.password = AUTHTOKEN;
+
+    opts.will = &wopts;
+    opts.will->message = "ALee Subscriber LWT";
+    opts.will->qos = 1;
+    opts.will->retained = 0;
+    opts.will->topicName = "SubLWT";
+   // opts.will = NULL;
 
     MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered);
     if ((rc = MQTTClient_connect(client, &opts)) != MQTTCLIENT_SUCCESS) {
